@@ -13,8 +13,8 @@ RUN     apt -y update && \
 USER    container
 ENV     USER=container HOME=/home/container
 WORKDIR /home/container
-RUN chown -R container:container /home/container
+RUN     chown -R container:container /home/container
 
 COPY    ./entrypoint.sh /entrypoint.sh
 COPY    ./redis.conf /usr/local/etc/redis/redis.conf
-CMD [ "redis-server", "/usr/local/etc/redis/redis.conf", "/bin/bash", "/entrypoint.sh" ]
+CMD     [ "/bin/bash", "/entrypoint.sh" ]
