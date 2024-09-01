@@ -1,4 +1,4 @@
-name: Build-Redis-Images
+name: Build-Shard-Redis-Images
 
 
 
@@ -9,7 +9,7 @@ on:
   push:
     branches: [ "master" ]
     paths:
-      - redis/**
+      - shard-redis/**
   pull_request:
     branches: [ "master" ]
 
@@ -24,13 +24,12 @@ env:
 
 jobs:
   build:
-    name: "yolks:redis_${{ matrix.tag }}"
+    name: "yolks:shard_redis_${{ matrix.tag }}"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         tag:
-          - 7
           - 7.4.0
     permissions:
       contents: read
@@ -74,16 +73,16 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@v6
         with:
-          context: ./redis
-          file: ./redis/${{ matrix.tag }}/Dockerfile
+          context: ./shard-redis
+          file: ./shard-redis/${{ matrix.tag }}/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ${{ env.REGISTRY }}/shardbyte/yolks:redis_${{ matrix.tag }}
+            ${{ env.REGISTRY }}/shardbyte/yolks:shard_redis_${{ matrix.tag }}
           labels: |
-            org.opencontainers.image.base.name="/shardbyte/redis_${{ matrix.tag }}"
+            org.opencontainers.image.base.name="/shardbyte/shard_redis_${{ matrix.tag }}"
             org.opencontainers.image.source="https://github.com/${{ github.actor }}/shard-yolk-basket"
             org.opencontainers.image.licenses="MIT"
-            org.opencontainers.image.title="yolks:redis_${{ matrix.tag }}"
+            org.opencontainers.image.title="yolks:shard_redis_${{ matrix.tag }}"
             org.opencontainers.image.description="Application packaged by ${{ github.actor }}"
             org.opencontainers.image.vendor="${{ github.actor }}"
