@@ -31,6 +31,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       curl \
       git \
       iproute2 \
+      libicu76 \
       locales \
       netcat-openbsd \
       procps \
