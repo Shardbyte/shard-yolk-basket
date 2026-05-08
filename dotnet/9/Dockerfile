@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 # hadolint ignore=DL3006
-FROM base
+FROM build
 
 ARG IMAGE_SOURCE="https://github.com/Shardbyte/shard-yolk-basket"
 ARG IMAGE_REVISION="unknown"
