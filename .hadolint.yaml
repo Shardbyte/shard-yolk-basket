@@ -1,0 +1,11 @@
+failure-threshold: warning
+
+ignored:
+  # Debian/Ubuntu: intentionally track security updates via image rebuilds,
+  # not by pinning every apt package version in Dockerfiles.
+  - DL3008
+  # Alpine: same rebuild-based update policy applies to apk packages.
+  - DL3018
+
+trustedRegistries:
+  - docker.io

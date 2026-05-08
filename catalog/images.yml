@@ -1,0 +1,376 @@
+# catalog/images.yml
+#
+# Source of truth for every published image in shard-yolk-basket.
+#
+# Long-term, README image tables, build/docker-bake.hcl targets, CI change
+# detection, and eggs repo references are generated or validated from this file.
+#
+# Field reference:
+#   id          Internal bake target name. Must match build/docker-bake.hcl.
+#   dockerfile  Path to Dockerfile relative to repo root.
+#   namespace   GHCR package namespace: yolks | games | installers | steamcmd
+#   tag         Primary public tag (the part after the colon).
+#   extra_tags  Additional fully-qualified tags (namespace:tag) published for
+#               this image. Use only when a real compatibility need exists.
+#   platforms   Target build platforms.
+#   depends_on  Bake target this image builds FROM. Null for external base images.
+#   type        base | runtime | build | installer
+#               base      — internal shared layer, not intended for direct use
+#               runtime   — user-facing image for running servers
+#               build     — image with compilers/SDKs, not for running servers
+#               installer — for use in egg install scripts only
+#   category    os | java | nodejs | python | dotnet | go | rust | mono | wine | game
+#   description One-line human-readable description.
+#   notes       Compatibility or special-case notes. Optional.
+#   status      active | deprecated | planned
+
+images:
+
+  # ── OS Bases ──────────────────────────────────────────────────────────────
+
+  - id: oses-debian
+    dockerfile: oses/debian/Dockerfile
+    namespace: yolks
+    tag: debian
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: null
+    type: base
+    category: os
+    description: Minimal Debian 13 (trixie-slim) runtime foundation for all modern yolks.
+    status: active
+
+  - id: oses-ubuntu
+    dockerfile: oses/ubuntu/Dockerfile
+    namespace: yolks
+    tag: ubuntu
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: null
+    type: base
+    category: os
+    description: Minimal Ubuntu 24.04 (Noble) runtime base for workloads that require Ubuntu compatibility.
+    notes: Standalone image. Does not descend from oses-debian. Uses ubuntu:24.04 upstream.
+    status: active
+
+  - id: oses-alpine
+    dockerfile: oses/alpine/Dockerfile
+    namespace: yolks
+    tag: alpine
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: null
+    type: base
+    category: os
+    description: Minimal Alpine 3.21 runtime base for lightweight musl-based game server workloads.
+    notes: Standalone image. Uses apk instead of apt. tini at /sbin/tini. Bash installed for entrypoint compatibility.
+    status: active
+
+  # ── Internal Base Layers ──────────────────────────────────────────────────
+
+  - id: base-runtime
+    dockerfile: base/runtime/Dockerfile
+    namespace: yolks
+    tag: debian-runtime
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: oses-debian
+    type: base
+    category: os
+    description: Runtime alias layer. Identical to yolks:debian; serves as a stable dependency root for game images.
+    status: active
+
+  - id: base-build
+    dockerfile: base/build/Dockerfile
+    namespace: yolks
+    tag: debian-build
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: oses-debian
+    type: build
+    category: os
+    description: Debian 13 build tooling layer. Adds gcc, clang, cmake, make, ninja, and Python 3 for compiling game server dependencies.
+    notes: Not intended as a server runtime. Use runtime images for deployed containers.
+    status: active
+
+  # ── Java ──────────────────────────────────────────────────────────────────
+
+  - id: java-17
+    dockerfile: java/17/Dockerfile
+    namespace: yolks
+    tag: java_17
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: null
+    type: runtime
+    category: java
+    description: Eclipse Temurin 17 JRE for legacy Java game servers that require Java 17.
+    notes: Java 17 is not available in Debian 13 apt. Uses eclipse-temurin:17-jre-noble (Ubuntu Noble base). Maintained by the Adoptium working group.
+    status: active
+
+  - id: java-21
+    dockerfile: java/21/Dockerfile
+    namespace: yolks
+    tag: java_21
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: oses-debian
+    type: runtime
+    category: java
+    description: OpenJDK 21 JRE runtime from Debian 13 packages. Primary Java runtime for Minecraft and most Java game servers.
+    status: active
+
+  - id: java-25
+    dockerfile: java/25/Dockerfile
+    namespace: yolks
+    tag: java_25
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: oses-debian
+    type: runtime
+    category: java
+    description: OpenJDK 25 JRE runtime from Debian 13 packages. For workloads that explicitly require the latest Java release.
+    status: active
+
+  # ── Node.js ───────────────────────────────────────────────────────────────
+
+  - id: nodejs-20
+    dockerfile: nodejs/20/Dockerfile
+    namespace: yolks
+    tag: nodejs_20
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: oses-debian
+    type: runtime
+    category: nodejs
+    description: Node.js 20 LTS runtime from Debian 13 packages. Suitable for bots and lightweight JS server workloads.
+    notes: Runtime only. Does not include npm or build tooling. Use nodejs_20-build for package installs or compilation.
+    status: active
+
+  - id: nodejs-22
+    dockerfile: nodejs/22/Dockerfile
+    namespace: yolks
+    tag: nodejs_22
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: oses-debian
+    type: runtime
+    category: nodejs
+    description: Node.js 22 LTS runtime from the official upstream Node image (node:22-trixie-slim). Newer LTS line for workloads that need it.
+    notes: Uses official Node upstream image rather than Debian apt. Imports the Pelican entrypoint from oses-debian.
+    status: active
+
+  - id: nodejs-24
+    dockerfile: nodejs/24/Dockerfile
+    namespace: yolks
+    tag: nodejs_24
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: null
+    type: runtime
+    category: nodejs
+    description: Node.js 24 LTS runtime from the official upstream Node image (node:24-trixie-slim).
+    notes: Runtime only. No npm or build tooling. Uses official Node upstream on Debian 13.
+    status: active
+
+  - id: nodejs-20-build
+    dockerfile: nodejs/20-build/Dockerfile
+    namespace: yolks
+    tag: nodejs_20-build
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: base-build
+    type: build
+    category: nodejs
+    description: Node.js 20 with npm and compiler tooling for building JS server projects and native addons.
+    notes: Extends base-build. Not intended as a server runtime image.
+    status: active
+
+  # ── Python ────────────────────────────────────────────────────────────────
+
+  - id: python-3-13
+    dockerfile: python/3.13/Dockerfile
+    namespace: yolks
+    tag: python_3.13
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: games-generic
+    type: runtime
+    category: python
+    description: Python 3.13 runtime with pip and venv support. For Python-based game servers and bots.
+    status: active
+
+  # ── .NET ──────────────────────────────────────────────────────────────────
+
+  - id: dotnet-9
+    dockerfile: dotnet/9/Dockerfile
+    namespace: yolks
+    tag: dotnet_9
+    platforms:
+      - linux/amd64
+    depends_on: base-build
+    type: build
+    category: dotnet
+    description: .NET 9 SDK and ASP.NET 9 runtime from the Microsoft Debian 13 package feed (amd64 only).
+    notes: Microsoft does not publish arm64 packages for .NET 9 on Debian 13. Use dotnet_10 for arm64 support. .NET 9 reaches end of life May 2026.
+    status: active
+
+  - id: dotnet-10
+    dockerfile: dotnet/10/Dockerfile
+    namespace: yolks
+    tag: dotnet_10
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: base-build
+    type: build
+    category: dotnet
+    description: .NET 10 SDK and ASP.NET 10 runtime from the Microsoft Debian 13 package feed.
+    notes: Installed via Microsoft apt repository (packages.microsoft.com/config/debian/13/prod.list). Telemetry disabled.
+    status: active
+
+  # ── Go ────────────────────────────────────────────────────────────────────
+
+  - id: go-1-24
+    dockerfile: go/1.24/Dockerfile
+    namespace: yolks
+    tag: go_1.24
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: base-build
+    type: build
+    category: go
+    description: Go 1.24 build image from Debian 13 packages.
+    status: active
+
+  # ── Wine ──────────────────────────────────────────────────────────────────
+
+  - id: wine-10
+    dockerfile: wine/10/Dockerfile
+    namespace: games
+    tag: wine
+    extra_tags:
+      - yolks:wine_10
+    platforms:
+      - linux/amd64
+    depends_on: games-generic
+    type: runtime
+    category: wine
+    description: Wine 10 compatibility runtime for Windows game server binaries on Linux (amd64 only).
+    notes: i386 multiarch required. amd64-only due to i386 ABI dependencies.
+    status: active
+
+  # ── Games ─────────────────────────────────────────────────────────────────
+
+  - id: games-generic
+    dockerfile: games/generic/Dockerfile
+    namespace: games
+    tag: generic
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: base-runtime
+    type: runtime
+    category: game
+    description: Common game server runtime libraries shared by Source, Unity, Python, Mono, and Wine images.
+    notes: Base layer for all game-specific images. Includes libstdc++6, libgcc-s1, libatomic1, sqlite3, and related libraries.
+    status: active
+
+  - id: games-source
+    dockerfile: games/source/Dockerfile
+    namespace: games
+    tag: source
+    platforms:
+      - linux/amd64
+    depends_on: games-generic
+    type: runtime
+    category: game
+    description: SteamCMD and Source dedicated server runtime with i386 compatibility libraries (amd64 only).
+    notes: SteamCMD installed to /opt/steamcmd, symlinked at /usr/local/bin/steamcmd. amd64-only.
+    status: active
+
+  - id: games-unity
+    dockerfile: games/unity/Dockerfile
+    namespace: games
+    tag: unity
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: games-generic
+    type: runtime
+    category: game
+    description: Headless Unity runtime libraries for dedicated Unity game servers.
+    status: active
+
+  # ── SteamCMD ──────────────────────────────────────────────────────────────
+
+  - id: steamcmd-debian
+    dockerfile: steamcmd/debian/Dockerfile
+    namespace: steamcmd
+    tag: debian
+    platforms:
+      - linux/amd64
+    depends_on: games-generic
+    type: runtime
+    category: game
+    description: Debian 13 SteamCMD runtime for game servers that use SteamCMD but do not need Source-engine libraries.
+    notes: Lighter than games:source — installs only the i386 libs SteamCMD itself requires. amd64-only.
+    status: active
+
+  # ── Installers ────────────────────────────────────────────────────────────
+
+  - id: installers-debian
+    dockerfile: installers/debian/Dockerfile
+    namespace: installers
+    tag: debian
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: null
+    type: installer
+    category: os
+    description: Debian 13 base for Pelican egg install scripts. Runs as root with curl, wget, git, jq, and archive tools.
+    notes: No entrypoint, no tini, no container user. WORKDIR is /mnt/server. Not for use as a server runtime image.
+    status: active
+
+  - id: installers-java-21
+    dockerfile: installers/java/21/Dockerfile
+    namespace: installers
+    tag: java_21
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: null
+    type: installer
+    category: java
+    description: Java 21 JDK base for egg install scripts that require a JVM during the install phase.
+    notes: Uses eclipse-temurin:21-jdk-noble (Ubuntu Noble base). JDK included for install-time compilation needs. Not a server runtime image.
+    status: active
+
+  - id: installers-dotnet-10
+    dockerfile: installers/dotnet/10/Dockerfile
+    namespace: installers
+    tag: dotnet_10
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: null
+    type: installer
+    category: dotnet
+    description: .NET 10 SDK base for egg install scripts that compile game server solutions from source.
+    notes: Installed via Microsoft apt repository. Telemetry disabled. Not a server runtime image.
+    status: active

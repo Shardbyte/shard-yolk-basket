@@ -1,0 +1,23 @@
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs and local output
+*.log
+tmp/
+dist/
+build-output/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Docker/build artifacts
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.deb
