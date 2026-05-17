@@ -54,17 +54,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Install ShellCheck when needed
-        run: |
-          if ! command -v shellcheck >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y --no-install-recommends shellcheck
-          fi
-
-      - name: Lint shell scripts
-        run: |
-          mapfile -d '' scripts < <(find . -type f -name '*.sh' -print0)
-          shellcheck "${scripts[@]}"
+      - name: Run ShellCheck
+        uses: Shardbyte/shard-shellcheck@v1
 
   workflows:
     name: Workflow Lint
@@ -74,7 +65,9 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Run actionlint
-        run: docker run --rm -v "${PWD}:/repo" -w /repo rhysd/actionlint:1.7.8
+        uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color
 
   dockerfiles:
     name: Dockerfile Lint
@@ -84,9 +77,10 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Run hadolint
-        run: |
-          mapfile -d '' dockerfiles < <(find . -type f -name Dockerfile -print0)
-          docker run --rm -v "${PWD}:/repo" -w /repo hadolint/hadolint:v2.14.0 hadolint -c .hadolint.yaml "${dockerfiles[@]}"
+        uses: hadolint/hadolint-action@v3.3.0
+        with:
+          recursive: true
+          config: .hadolint.yaml
 
   bake-check:
     name: Build Definition Check
