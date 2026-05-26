@@ -35,9 +35,44 @@ env:
   PUBLISH_IMAGES: ${{ github.event_name != 'workflow_dispatch' || inputs.push }}
 
 jobs:
-  publish:
-    name: Build And Publish
+  detect-build-targets:
+    name: Detect Changed Images
     runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.targets.outputs.targets }}
+      count: ${{ steps.targets.outputs.count }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve comparison range
+        id: range
+        shell: bash
+        run: |
+          # Tag releases always rebuild everything — pass empty BASE_SHA so
+          # changed-targets.sh falls through to add_all.
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "base=" >> "${GITHUB_OUTPUT}"
+          else
+            echo "base=${{ github.event.before }}" >> "${GITHUB_OUTPUT}"
+          fi
+          echo "head=${{ github.sha }}" >> "${GITHUB_OUTPUT}"
+
+      - name: Detect changed image targets
+        id: targets
+        run: ./scripts/changed-targets.sh "${{ steps.range.outputs.base }}" "${{ steps.range.outputs.head }}" "${{ github.event_name }}"
+
+  publish:
+    name: Build And Publish (${{ matrix.target }})
+    needs: detect-build-targets
+    if: ${{ needs.detect-build-targets.outputs.count > 0 }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.detect-build-targets.outputs.targets) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -72,13 +107,13 @@ jobs:
         with:
           source: .
           files: build/docker-bake.hcl
-          targets: default
+          targets: ${{ matrix.target }}
           push: ${{ env.PUBLISH_IMAGES == 'true' }}
           sbom: true
           provenance: mode=max
           set: |
-            *.cache-from=type=gha,scope=release
-            *.cache-to=type=gha,scope=release,mode=max
+            *.cache-from=type=gha,scope=publish-${{ matrix.target }}
+            *.cache-to=type=gha,scope=publish-${{ matrix.target }},mode=max
         env:
           REGISTRY: ${{ steps.image.outputs.registry }}
           IMAGE_SOURCE: ${{ steps.image.outputs.source }}
