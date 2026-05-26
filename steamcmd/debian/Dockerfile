@@ -30,8 +30,13 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && curl -fsSL https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz \
       | tar -xz -C /opt/steamcmd \
     && chown -R container:container /opt/steamcmd \
-    && chmod 0755 /opt/steamcmd/steamcmd.sh \
+    && chmod 0755 /opt/steamcmd/steamcmd.sh /opt/steamcmd/linux32/steamcmd \
     && ln -s /opt/steamcmd/steamcmd.sh /usr/local/bin/steamcmd \
     && rm -rf /var/lib/apt/lists/*
 
 USER container
+
+# Bootstrap steamcmd: forces a self-update so the binary is current in the image
+# layer and containers don't hit permission-denied on the linux32/steamcmd binary
+# when steamcmd overwrites itself on first run.
+RUN /opt/steamcmd/steamcmd.sh +quit
