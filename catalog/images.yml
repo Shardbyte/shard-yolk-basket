@@ -100,6 +100,34 @@ images:
 
   # ── Java ──────────────────────────────────────────────────────────────────
 
+  - id: java-8
+    dockerfile: java/8/Dockerfile
+    namespace: yolks
+    tag: java_8
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: oses-debian
+    type: runtime
+    category: java
+    description: Eclipse Temurin 8 JDK runtime on Debian 13 for legacy Java game servers.
+    notes: Java 8 is not in Debian 13 apt. Installed via the Adoptium apt repository (packages.adoptium.net). For Minecraft 1.7.10 through 1.12 and older Forge installers.
+    status: active
+
+  - id: java-11
+    dockerfile: java/11/Dockerfile
+    namespace: yolks
+    tag: java_11
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    depends_on: oses-debian
+    type: runtime
+    category: java
+    description: Eclipse Temurin 11 JDK runtime on Debian 13 for legacy Java game servers.
+    notes: Java 11 is not in Debian 13 apt. Installed via the Adoptium apt repository (packages.adoptium.net). For Minecraft 1.12.1 through 1.16.5.
+    status: active
+
   - id: java-17
     dockerfile: java/17/Dockerfile
     namespace: yolks
@@ -107,11 +135,11 @@ images:
     platforms:
       - linux/amd64
       - linux/arm64
-    depends_on: null
+    depends_on: oses-debian
     type: runtime
     category: java
-    description: Eclipse Temurin 17 JRE for legacy Java game servers that require Java 17.
-    notes: Java 17 is not available in Debian 13 apt. Uses eclipse-temurin:17-jre-noble (Ubuntu Noble base). Maintained by the Adoptium working group.
+    description: Eclipse Temurin 17 JDK runtime on Debian 13 for Java game servers that require Java 17.
+    notes: Java 17 is not in Debian 13 apt. Installed via the Adoptium apt repository (packages.adoptium.net). For Minecraft 1.17 through 1.20.4. Also covers Minecraft 1.17, which requires Java 16 minimum.
     status: active
 
   - id: java-21

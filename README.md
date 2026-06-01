@@ -12,7 +12,9 @@ Clean, layered, and multi-platform. Runtime images stay small. Build tools stay 
 
 | Version | Image | Notes |
 | --- | --- | --- |
-| Java 17 | `ghcr.io/shardbyte/yolks:java_17` | Legacy — use for servers that require Java 17 specifically |
+| Java 8 | `ghcr.io/shardbyte/yolks:java_8` | Legacy — Minecraft 1.7.10 through 1.12 and old Forge installers |
+| Java 11 | `ghcr.io/shardbyte/yolks:java_11` | Legacy — Minecraft 1.12.1 through 1.16.5 |
+| Java 17 | `ghcr.io/shardbyte/yolks:java_17` | Legacy — Minecraft 1.17 through 1.20.4 (also covers 1.17 which needs Java 16+) |
 | Java 21 | `ghcr.io/shardbyte/yolks:java_21` | Recommended — most Minecraft and Java game servers |
 | Java 25 | `ghcr.io/shardbyte/yolks:java_25` | For servers that explicitly require the latest Java release |
 
@@ -163,7 +165,9 @@ base/
   runtime/             Runtime alias layer (extends oses/debian).
   build/               Build tools and compiler layer (extends oses/debian).
 java/
-  17/                  Java 17 runtime (Eclipse Temurin, Ubuntu Noble).
+  8/                   Java 8 runtime (Temurin via Adoptium apt, Debian 13).
+  11/                  Java 11 runtime (Temurin via Adoptium apt, Debian 13).
+  17/                  Java 17 runtime (Temurin via Adoptium apt, Debian 13).
   21/                  Java 21 runtime (OpenJDK, Debian 13).
   25/                  Java 25 runtime (OpenJDK, Debian 13).
 nodejs/

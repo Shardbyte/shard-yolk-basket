@@ -5,6 +5,8 @@ group "default" {
     "base-build",
     "oses-ubuntu",
     "oses-alpine",
+    "java-8",
+    "java-11",
     "java-17",
     "java-21",
     "java-25",
@@ -132,6 +134,40 @@ target "oses-alpine" {
 }
 
 # ── Java ─────────────────────────────────────────────────────────────────────
+
+target "java-8" {
+  context    = "java/8"
+  dockerfile = "Dockerfile"
+  contexts = {
+    base = "target:oses-debian"
+  }
+  platforms = split(",", PLATFORMS)
+  tags = [
+    "${REGISTRY}/yolks:java_8"
+  ]
+  args = {
+    IMAGE_SOURCE   = "${IMAGE_SOURCE}"
+    IMAGE_REVISION = "${IMAGE_REVISION}"
+    IMAGE_CREATED  = "${IMAGE_CREATED}"
+  }
+}
+
+target "java-11" {
+  context    = "java/11"
+  dockerfile = "Dockerfile"
+  contexts = {
+    base = "target:oses-debian"
+  }
+  platforms = split(",", PLATFORMS)
+  tags = [
+    "${REGISTRY}/yolks:java_11"
+  ]
+  args = {
+    IMAGE_SOURCE   = "${IMAGE_SOURCE}"
+    IMAGE_REVISION = "${IMAGE_REVISION}"
+    IMAGE_CREATED  = "${IMAGE_CREATED}"
+  }
+}
 
 target "java-17" {
   context    = "java/17"
